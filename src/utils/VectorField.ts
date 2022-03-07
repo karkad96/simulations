@@ -34,9 +34,9 @@ export class VectorField {
       });
 
       let color = new THREE.Color();
-      color.setHSL(0.7 / (superposition.length() + 1) ,1,0.5);
+      color.setHSL(0.7 / (superposition.length() + 1), 1, 0.5);
       arrow.setColor(color);
-      //arrow.setLength(0.5 - 0.5 / (superposition.length() + 1), 0.1, 0.1);
+      arrow.setLength(0.5 - 0.5 / (superposition.length() + 1), 0.1, 0.1);
       arrow.setDirection(superposition.normalize());
     });
   }
