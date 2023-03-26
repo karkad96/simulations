@@ -102,5 +102,8 @@
       }
     }
   },
-  "defaultProject": "simulations"
+  "defaultProject": "simulations",
+  "cli": {
+    "analytics": false
+  }
 }

@@ -16,8 +16,8 @@ export class Arrow2DHelper extends Object3D {
   private mat: LineBasicMaterial;
   private mat2: MeshBasicMaterial;
   private readonly arrowHead;
-  constructor(dir       = new Vector3(0, 1, 0),
-              origin    = new Vector3(0, 0, 0),
+  constructor(dir               = new Vector3(0, 1, 0),
+              origin            = new Vector3(0, 0, 0),
               length    = 1,
               color     = 0xffff00,
               headLength= length * 0.2,
@@ -32,7 +32,6 @@ export class Arrow2DHelper extends Object3D {
 
       _triangleGeometry = new BufferGeometry();
       _triangleGeometry.setAttribute('position', new Float32BufferAttribute([-0.5, 0, 0, 0.5, 0, 0, 0, Math.sqrt(3) / 2, 0], 3));
-      //_triangleGeometry.translate( 0, -0.5, 0 );
     }
 
     this.position.copy(origin);

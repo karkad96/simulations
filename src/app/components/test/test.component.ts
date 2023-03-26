@@ -1,7 +1,8 @@
 import {Component, OnInit} from '@angular/core';
-import {Particles} from "../../../utils/Particles";
-import {VectorField} from "../../../utils/VectorField";
 import {ScrService} from "../../../services/ScrService";
+import {Environment} from "../../../utils/Environment";
+import {Vector3} from "three";
+
 @Component({
   selector: 'app-test',
   templateUrl: './test.component.html',
@@ -14,13 +15,12 @@ export class TestComponent implements OnInit {
   }
 
   ngOnInit() {
-    let vectorField = new VectorField(this.SCR);
-    let particles = new Particles(this.SCR, vectorField);
+    let env = new Environment(this.SCR);
 
-    particles.addParticle(5, 5, 20);
-    particles.addParticle(0, 0, 10);
-    particles.addParticle(2, 1, -10);
-    particles.addParticle(-2, 1, -1);
+    env.addNewParticle({ center: new Vector3(5, 5),  charge: 20,  radius: 0.15, segments: 15 });
+    env.addNewParticle({ center: new Vector3(0, 0),  charge: 10,  radius: 0.15, segments: 15 });
+    env.addNewParticle({ center: new Vector3(2, 1),  charge: -10, radius: 0.15, segments: 15 });
+    env.addNewParticle({ center: new Vector3(-2, 1), charge: -1,  radius: 0.15, segments: 15 });
 
     this.SCR.animate();
   }
