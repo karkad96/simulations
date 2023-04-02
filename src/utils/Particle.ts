@@ -13,6 +13,7 @@ export class ParticleData {
 }
 
 export class Particle extends THREE.Mesh<THREE.CircleGeometry, THREE.MeshBasicMaterial> {
+  public charge: number = 0;
   public constructor(private SCR: ScrService, particleData: ParticleData) {
     super();
     this.type = 'Particle';
@@ -23,8 +24,7 @@ export class Particle extends THREE.Mesh<THREE.CircleGeometry, THREE.MeshBasicMa
 
     let material: THREE.MeshBasicMaterial = new THREE.MeshBasicMaterial({
       color: particleData.charge != 0 ? (particleData.charge > 0 ? 0xff0000 : 0x0000ff) : 0xffff00,
-      transparent: true,
-      userData: {charge: particleData.charge}
+      transparent: true
     });
 
     this.geometry = _geometry;
@@ -32,6 +32,8 @@ export class Particle extends THREE.Mesh<THREE.CircleGeometry, THREE.MeshBasicMa
 
     this.position.x = particleData.center.x;
     this.position.y = particleData.center.y;
+
+    this.charge = particleData.charge;
 
     SCR.scene.add(this);
   }
