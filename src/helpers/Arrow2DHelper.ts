@@ -59,7 +59,7 @@ export class Arrow2DHelper extends Object3D {
     }
   }
 
-  setLength(length: number, headLength = length * 0.2, headWidth = headLength * 0.2) {
+  setLength(length: number, headLength = length * 0.3, headWidth = headLength) {
     this.line.scale.set(1, length - headLength, 0);
     this.line.updateMatrix();
 

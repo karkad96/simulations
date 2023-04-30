@@ -1,3 +1,3 @@
 export abstract class ISimulationFrame {
-  public abstract generateNextFrame(): void;
+  public abstract generateNextFrame(delta: number): void;
 }

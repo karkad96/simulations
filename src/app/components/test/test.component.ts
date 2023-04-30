@@ -18,11 +18,11 @@ export class TestComponent implements OnInit {
   ngOnInit() {
     let env = new Environment(this.SCR);
 
-    env.addNewParticle({ center: new Vector3(0, 0),  charge: 1,  radius: 0.15, segments: 15 });
-    env.addNewParticle({ center: new Vector3(5, 0),  charge: -1,  radius: 0.15, segments: 15 });
-    env.addNewParticle({ center: new Vector3(5, 5),  charge: 15, radius: 0.15, segments: 15 });
-    env.addNewParticle({ center: new Vector3(0, 5), charge: -7,  radius: 0.15, segments: 15 });
-    this.SCR.animationFrames.push(new ParticlesSimulationFrame(env));
+    env.addNewParticle({ center: new Vector3(0, 0),   charge: -0.0001,  radius: 1, segments: 15 });
+    env.addNewParticle({ center: new Vector3(-4, 13),   charge: -0.0003,  radius: 1, segments: 15 });
+    env.addNewParticle({ center: new Vector3(15, 0),   charge: 0.0002,  radius: 1, segments: 15 });
+    env.addNewParticle({ center: new Vector3(15, -16),  charge: 0.0001, radius: 1, segments: 15 });
+    this.SCR.simulationFrames.push(new ParticlesSimulationFrame(env, this.SCR));
     this.SCR.animate();
   }
 

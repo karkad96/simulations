@@ -14,11 +14,15 @@ export class ParticleData {
 
 export class Particle extends THREE.Mesh<THREE.CircleGeometry, THREE.MeshBasicMaterial> {
   public charge: number = 0;
+  public radius2: number = 0;
+  public radius: number = 0;
   public constructor(private SCR: ScrService, particleData: ParticleData) {
     super();
     this.type = 'Particle';
 
-    if (_geometry === undefined) {
+    if (_geometry === undefined ||
+        _geometry.parameters.radius != particleData.radius ||
+        _geometry.parameters.segments != particleData.segments) {
       _geometry = new CircleGeometry(particleData.radius, particleData.segments);
     }
 
@@ -34,6 +38,8 @@ export class Particle extends THREE.Mesh<THREE.CircleGeometry, THREE.MeshBasicMa
     this.position.y = particleData.center.y;
 
     this.charge = particleData.charge;
+    this.radius = particleData.radius;
+    this.radius2 = particleData.radius *  particleData.radius;
 
     SCR.scene.add(this);
   }
