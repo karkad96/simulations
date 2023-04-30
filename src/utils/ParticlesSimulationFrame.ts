@@ -36,19 +36,19 @@ export class ParticlesSimulationFrame implements ISimulationFrame {
 
         switch (this.particleOnBorder(particle)) {
           case 0:
-            this._simulationState[4 * index + 1] = this.SCR.height / 2 - particle.radius;
+            this._simulationState[4 * index + 1] = this.SCR.height / 2  + this.SCR.camera.position.y - particle.radius;
             this._simulationState[4 * index + 3] = -this._simulationState[4 * index + 3];
             break;
           case 2:
-            this._simulationState[4 * index + 1] = -this.SCR.height / 2 + particle.radius;
+            this._simulationState[4 * index + 1] = -this.SCR.height / 2 + this.SCR.camera.position.y + particle.radius;
             this._simulationState[4 * index + 3] = -this._simulationState[4 * index + 3];
             break;
           case 1:
-            this._simulationState[4 * index] = this.SCR.width / 2 - particle.radius;
+            this._simulationState[4 * index] = this.SCR.width / 2 + this.SCR.camera.position.x - particle.radius;
             this._simulationState[4 * index + 2] = -this._simulationState[4 * index + 2];
             break;
           case 3:
-            this._simulationState[4 * index] = -this.SCR.width / 2 + particle.radius;
+            this._simulationState[4 * index] = -this.SCR.width / 2 + this.SCR.camera.position.x + particle.radius;
             this._simulationState[4 * index + 2] = -this._simulationState[4 * index + 2];
             break;
           default:
@@ -121,13 +121,13 @@ export class ParticlesSimulationFrame implements ISimulationFrame {
   }
 
   private particleOnBorder(particle: Particle): number {
-    if(particle.position.y + particle.radius >= this.SCR.height / 2)
+    if(particle.position.y + particle.radius >= this.SCR.height / 2 + this.SCR.camera.position.y)
       return 0;
-    else if(particle.position.x + particle.radius >= this.SCR.width / 2)
+    else if(particle.position.x + particle.radius >= this.SCR.width / 2 + this.SCR.camera.position.x)
       return 1;
-    else if(particle.position.y - particle.radius <= -this.SCR.height / 2)
+    else if(particle.position.y - particle.radius <= -this.SCR.height / 2 + this.SCR.camera.position.y)
       return 2;
-    else if(particle.position.x - particle.radius <= -this.SCR.width / 2)
+    else if(particle.position.x - particle.radius <= -this.SCR.width / 2 + this.SCR.camera.position.x)
       return 3;
 
     return -1;
@@ -195,8 +195,10 @@ export class ParticlesSimulationFrame implements ISimulationFrame {
   private mergeParticles(particle1: Particle, particle2: Particle): Particle {
     let middlePosition = new Vector3(particle2.position.x + particle1.position.x,
                                      particle2.position.y + particle1.position.y, 0).multiplyScalar(0.5);
+    
+    let charge = particle1.charge + particle2.charge;
 
-    return new Particle(this.SCR,{radius: 1, segments: 15, charge: particle1.charge + particle2.charge, center: middlePosition})
+    return new Particle(this.SCR,{radius: 1, segments: 15, charge: Math.abs(charge) <= 1e-10 ? 0 : charge, center: middlePosition})
   }
 
   private removeParticleFromSimulationState(index: number): void {
