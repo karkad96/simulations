@@ -1,5 +1,4 @@
-import * as THREE from 'three';
-import {Vector3} from "three";
+import {Vector3, Color} from "three";
 import {ScrService} from "../services/ScrService";
 import {DragControls} from "three/examples/jsm/controls/DragControls";
 import {VectorField} from "./VectorField"
@@ -8,7 +7,6 @@ import {Arrow2DHelper} from "../helpers/Arrow2DHelper";
 import {ParticlesSimulationFrame} from "./ParticlesSimulationFrame";
 
 export class Environment {
-  private _particles: Particle[] = [];
   get particles(): Particle[] {
     return this._particles;
   }
@@ -17,17 +15,86 @@ export class Environment {
     this._particles = value;
   }
 
-  private readonly _vectorField: VectorField;
-  private _dragControls: DragControls;
-  private _lastMousePosition: Vector3 = new Vector3(0, 0, 0);
+  private readonly vectorField: VectorField;
+  private speed: Vector3 = new Vector3(0, 0, 0);
+  private lastMouseposition: Vector3 = new Vector3(0, 0, 0);
+  private _particles: Particle[] = [];
+  private movingParticle!: Particle;
+  private dragControls: DragControls;
+  private timestamp: number = 0;
+
   public constructor(private SCR: ScrService) {
-    this._vectorField = new VectorField(this.SCR);
-    this._dragControls = new DragControls([], this.SCR.camera, this.SCR.renderer.domElement);
-    document.addEventListener('wheel', this._vectorField.replaceVectors);
+    this.vectorField = new VectorField(this.SCR);
+    this.dragControls = new DragControls([], this.SCR.camera, this.SCR.renderer.domElement);
+    this.addNeccessaryEvents();
+  }
+
+  public addNewParticle(particleData: ParticleData): void {
+    this._particles.push(new Particle(this.SCR, particleData));
+    this.dragControls.dispose();
+    this.initDragControls();
+  }
+
+  private initDragControls(): void {
+    this.dragControls = new DragControls(this._particles, this.SCR.camera, this.SCR.renderer.domElement);
+    this.addDragStartEvent();
+    this.addDragEndEvent();
+  }
+
+  public updateVectorField = (): void => {
+    this.vectorField.arrows.forEach((arrowsRow: Arrow2DHelper[]) => {
+      arrowsRow.forEach((arrow: Arrow2DHelper) => {
+        let superposition = new Vector3(0, 0, 0);
+        this._particles.forEach((particle: Particle) => {
+          let dir = new Vector3(arrow.position.x - particle.position.x, arrow.position.y - particle.position.y, 0).multiplyScalar(70);
+          const len2 = dir.lengthSq();
+          dir = dir.normalize();
+          dir.multiplyScalar(particle.charge / len2);
+          superposition.add(dir);
+        });
+        let color = new Color();
+        let minArrowLength = this.vectorField.getMinArrowLength();
+  
+        color.setHSL(0.85 / (this.SCR.coulombConst * superposition.length() + 1), 1, 0.5);
+        arrow.setColor(color);
+        arrow.setLength(minArrowLength - minArrowLength / (this.SCR.coulombConst * 8 * superposition.length() + 1), minArrowLength * 0.3, minArrowLength * 0.3);
+        arrow.setDirection(superposition.normalize());
+      });
+    });
+  }
+
+  private getSpeedOfMouse = (event: MouseEvent): void => {
+    if (this.timestamp === 0) {
+      this.timestamp = Date.now();
+      this.lastMouseposition.x = this.movingParticle!.position.x;
+      this.lastMouseposition.y = this.movingParticle!.position.y;
+      return;
+    }
+    
+    let now = Date.now();
+    let dt =  now - this.timestamp;
+    let dx = this.movingParticle.position.x - this.lastMouseposition.x;
+    let dy = this.movingParticle.position.y - this.lastMouseposition.y;
+    let speedX = Math.round(dx / dt * 500);
+    let speedY = Math.round(dy / dt * 500);
+    
+    if (speedX === Infinity || speedX === -Infinity || isNaN(speedX))
+      speedX = 0;
+    if (speedY === Infinity || speedY === -Infinity || isNaN(speedY))
+      speedY = 0;
+
+    this.speed.set(speedX, speedY, 0);
+    this.timestamp = now;
+    this.lastMouseposition.x = this.movingParticle.position.x;
+    this.lastMouseposition.y = this.movingParticle.position.y;
+  }
+
+  private addNeccessaryEvents(): void {
+    document.addEventListener('wheel', this.vectorField.replaceVectors);
     document.addEventListener('mousedown', (e: MouseEvent) => {
       switch (e.button) {
         case 2:
-          document.addEventListener('mousemove', this._vectorField.test);
+          document.addEventListener('mousemove', this.vectorField.onPanning);
           break;
         default:
           break;
@@ -36,9 +103,7 @@ export class Environment {
     document.addEventListener('mouseup', (e: MouseEvent) => {
       switch (e.button) {
         case 2:
-          document.removeEventListener('mousemove', this._vectorField.test);
-          // let tt = new Particle(this.SCR, { center: new Vector3(-this.SCR.width / 2 + this.SCR.camera.position.x, -this.SCR.height / 2 + this.SCR.camera.position.y),   charge: -0.0001,  radius: 1, segments: 15 });
-          // this.SCR.scene.add(tt);
+          document.removeEventListener('mousemove', this.vectorField.onPanning);
           break;
         default:
           break;
@@ -46,70 +111,23 @@ export class Environment {
     });
   }
 
-  public addNewParticle(particleData: ParticleData): void {
-    this._particles.push(new Particle(this.SCR, particleData));
-    this._dragControls.dispose();
-    this.initDragControls();
+  private addDragStartEvent(): void {
+    this.dragControls.addEventListener('dragstart', (event) => {
+      this.SCR.params.draggedParticle = event['object'].uuid;
+      this.movingParticle = event['object'] as Particle;
+      document.addEventListener('mousemove', this.getSpeedOfMouse);
+    });
   }
 
-  private initDragControls(): void {
-    this._dragControls = new DragControls(this._particles, this.SCR.camera, this.SCR.renderer.domElement);
-
-    this._dragControls.addEventListener('dragstart', (event) => {
-      this.SCR.params.draggedParticle = event['object'].uuid;
-    });
-    this._dragControls.addEventListener('dragend', (event) => {
+  private addDragEndEvent(): void {
+    this.dragControls.addEventListener('dragend', (event) => {
       this.SCR.params.draggedParticle = "";
-        this.SCR.simulationFrames.forEach((simFrame) => {
+      document.removeEventListener('mousemove', this.getSpeedOfMouse);
+      this.SCR.simulationFrames.forEach((simFrame) => {
         if (simFrame as ParticlesSimulationFrame) {
-          let mousePosition = new Vector3().copy(event['object'].position);
-          //(simFrame as ParticlesSimulationFrame).setParticleVelocity(event['object'], mousePosition.sub(this._lastMousePosition));
+          (simFrame as ParticlesSimulationFrame).setParticleVelocity(event['object'], this.speed);
         }
       });
     });
-  }
-
-  public getLengthSquared(vector: Vector3): number {
-    return vector.x * vector.x + vector.y * vector.y;
-  }
-
-  public updateVectorField = () => {
-    this._vectorField.arrows.flat().forEach((arrow: Arrow2DHelper) => {
-      let superposition = new THREE.Vector3(0, 0, 0);
-      this._particles.forEach((particle: Particle) => {
-        let dir = new THREE.Vector3(arrow.position.x - particle.position.x, arrow.position.y - particle.position.y, 0).multiplyScalar(70);
-        const len2 = this.getLengthSquared(dir);
-        dir = dir.normalize();
-        dir.multiplyScalar(particle.charge / len2);
-        superposition.add(dir);
-      });
-      let color = new THREE.Color();
-      let minArrowLength = this._vectorField.getMinArrowLength();
-
-      color.setHSL(0.85 / (this.SCR.coulombConst * superposition.length() + 1), 1, 0.5);
-      arrow.setColor(color);
-      arrow.setLength(minArrowLength - minArrowLength / (this.SCR.coulombConst * 8 * superposition.length() + 1),
-            minArrowLength * 0.3, minArrowLength * 0.3);
-      arrow.setDirection(superposition.normalize());
-    });
-  }
-
-  private setMouseCoordinatesOnScene = (event: MouseEvent) => {
-    let vec = new THREE.Vector3();
-    let pos = new THREE.Vector3();
-
-    vec.set(
-      (event.clientX / window.innerWidth) * 2 - 1,
-      -(event.clientY / window.innerHeight) * 2 + 1,
-      0 );
-
-    vec.unproject(this.SCR.camera);
-
-    vec.sub(this.SCR.camera.position).normalize();
-
-    let distance = - this.SCR.camera.position.z / vec.z;
-
-    pos.copy(this.SCR.camera.position).add(vec.multiplyScalar(distance));
-    this._lastMousePosition.copy(pos);
   }
 }

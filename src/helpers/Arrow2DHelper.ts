@@ -13,8 +13,8 @@ let _triangleGeometry: BufferGeometry;
 export class Arrow2DHelper extends Object3D {
   override type: string;
   private readonly line: Line;
-  private mat: LineBasicMaterial;
-  private mat2: MeshBasicMaterial;
+  private lineMateral: LineBasicMaterial;
+  private triangleMaterial: MeshBasicMaterial;
   private readonly arrowHead;
   constructor(dir               = new Vector3(0, 1, 0),
               origin            = new Vector3(0, 0, 0),
@@ -36,11 +36,11 @@ export class Arrow2DHelper extends Object3D {
 
     this.position.copy(origin);
 
-    this.line = new Line(_lineGeometry, this.mat = new LineBasicMaterial({color: color}));
+    this.line = new Line(_lineGeometry, this.lineMateral = new LineBasicMaterial({color: color}));
     this.line.matrixAutoUpdate = false;
     this.add(this.line);
 
-    this.arrowHead = new Mesh(_triangleGeometry, this.mat2 = new MeshBasicMaterial({color: color}));
+    this.arrowHead = new Mesh(_triangleGeometry, this.triangleMaterial = new MeshBasicMaterial({color: color}));
     this.arrowHead.matrixAutoUpdate = false;
     this.add(this.arrowHead);
 
@@ -69,8 +69,8 @@ export class Arrow2DHelper extends Object3D {
   }
 
   setColor(color: ColorRepresentation) {
-    this.mat.color.set(color);
-    this.mat2.color.set(color);
+    this.lineMateral.color.set(color);
+    this.triangleMaterial.color.set(color);
   }
 
   override copy(source: this): this {

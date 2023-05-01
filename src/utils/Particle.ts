@@ -1,8 +1,7 @@
-import * as THREE from 'three';
-import {CircleGeometry, Vector3} from "three";
+import {CircleGeometry, Vector3, Mesh, MeshBasicMaterial} from "three";
 import {ScrService} from "../services/ScrService";
 
-let _geometry: THREE.CircleGeometry;
+let _geometry: CircleGeometry;
 
 export class ParticleData {
   constructor(public center: Vector3 = new Vector3(0, 0, 0),
@@ -12,10 +11,11 @@ export class ParticleData {
   }
 }
 
-export class Particle extends THREE.Mesh<THREE.CircleGeometry, THREE.MeshBasicMaterial> {
+export class Particle extends Mesh<CircleGeometry, MeshBasicMaterial> {
   public charge: number = 0;
   public radius2: number = 0;
   public radius: number = 0;
+  
   public constructor(private SCR: ScrService, particleData: ParticleData) {
     super();
     this.type = 'Particle';
@@ -26,7 +26,7 @@ export class Particle extends THREE.Mesh<THREE.CircleGeometry, THREE.MeshBasicMa
       _geometry = new CircleGeometry(particleData.radius, particleData.segments);
     }
 
-    let material: THREE.MeshBasicMaterial = new THREE.MeshBasicMaterial({
+    let material: MeshBasicMaterial = new MeshBasicMaterial({
       color: particleData.charge != 0 ? (particleData.charge > 0 ? 0xff0000 : 0x0000ff) : 0xffff00,
       transparent: true
     });
@@ -39,7 +39,7 @@ export class Particle extends THREE.Mesh<THREE.CircleGeometry, THREE.MeshBasicMa
 
     this.charge = particleData.charge;
     this.radius = particleData.radius;
-    this.radius2 = particleData.radius *  particleData.radius;
+    this.radius2 = particleData.radius * particleData.radius;
 
     SCR.scene.add(this);
   }
